@@ -1,6 +1,7 @@
 package org.ff4j.sample.config;
 
 import java.beans.ConstructorProperties;
+import jakarta.servlet.MultipartConfigElement;
 import org.ff4j.FF4j;
 import org.ff4j.web.FF4jDispatcherServlet;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
@@ -22,7 +23,18 @@ public class FF4JWebConsoleConfiguration extends SpringBootServletInitializer im
 
   @Bean
   public ServletRegistrationBean ff4jDispatcherServletRegistrationBean(
-      FF4jDispatcherServlet ff4jDispatcherServlet) {
-    return new ServletRegistrationBean(ff4jDispatcherServlet, "/ff4j-web-console/*");
+          FF4jDispatcherServlet ff4jDispatcherServlet) {
+    ServletRegistrationBean servletRegistrationBean = new ServletRegistrationBean(ff4jDispatcherServlet, "/ff4j-web-console/*");
+    servletRegistrationBean.setMultipartConfig(getMultiPartConfig());
+    return servletRegistrationBean;
+  }
+
+  private MultipartConfigElement getMultiPartConfig() {
+    String location = "";
+    long maxFileSize = -1;
+    long maxRequestSize = -1;
+    int fileSizeThreshold = 0;
+    return new MultipartConfigElement(location, maxFileSize, maxRequestSize, fileSizeThreshold
+    );
   }
 }
