@@ -30,8 +30,9 @@ import org.ff4j.services.FeatureServices
 import org.ff4j.services.InitializerStepDef
 import org.ff4j.services.domain.FeatureApiBean
 import org.ff4j.services.model.FeatureActions
+import reactor.core.publisher.Mono
+import reactor.test.StepVerifier
 import java.lang.Boolean
-import kotlin.Any
 import kotlin.String
 import kotlin.Throwable
 
@@ -43,7 +44,8 @@ import kotlin.Throwable
 class FeatureServicesStepDef(ff4j: FF4j, featureServices: FeatureServices) : En {
 
   private val testUtils = FF4JTestHelperUtils(ff4j)
-  private lateinit var actualResponse: Any
+  private lateinit var actualFeatureApiResponse: Mono<FeatureApiBean>
+  private lateinit var actualFeatureActionResponse: Mono<FeatureActions>
   private lateinit var exception: Throwable
 
   init {
@@ -63,7 +65,7 @@ class FeatureServicesStepDef(ff4j: FF4j, featureServices: FeatureServices) : En 
     }
     When("the user requests for a feature by feature id as {string}") { featureUID: String ->
       try {
-        actualResponse = featureServices.getFeature(featureUID)
+        actualFeatureApiResponse = featureServices.getFeature(featureUID)
       } catch (throwable: Throwable) {
         exception = throwable
       }
@@ -71,7 +73,7 @@ class FeatureServicesStepDef(ff4j: FF4j, featureServices: FeatureServices) : En 
     When("the user requests to create or update a feature with feature id as {string} and feature spec as") { featureUID: String, featureSpec: String ->
       val featureApiBean = Gson().fromJson(featureSpec, FeatureApiBean::class.java)
       try {
-        actualResponse = featureServices.createOrUpdateFeature(featureUID, featureApiBean)
+        actualFeatureActionResponse = featureServices.createOrUpdateFeature(featureUID, featureApiBean)
       } catch (throwable: Throwable) {
         exception = throwable
       }
@@ -137,18 +139,26 @@ class FeatureServicesStepDef(ff4j: FF4j, featureServices: FeatureServices) : En 
         expectedPermissions.split(",")
       )
       val expectedFeatureApiBean = FeatureApiBean(expectedFeature)
-      assertThat(actualResponse).isEqualToComparingFieldByField(expectedFeatureApiBean)
+      StepVerifier.create(actualFeatureApiResponse).consumeNextWith { actualFeatureApiBean: FeatureApiBean ->
+        assertThat(actualFeatureApiBean).isEqualToComparingFieldByField(expectedFeatureApiBean)
+      }.verifyComplete()
     }
     Then("feature is created") {
-      assertThat(actualResponse).isEqualTo(FeatureActions.CREATED)
+      StepVerifier.create(actualFeatureActionResponse).consumeNextWith { actualFeatureAction: FeatureActions ->
+        assertThat(actualFeatureAction).isEqualTo(FeatureActions.CREATED)
+      }.verifyComplete()
     }
     Then("feature is updated") {
-      assertThat(actualResponse).isEqualTo(FeatureActions.UPDATED)
+      StepVerifier.create(actualFeatureActionResponse).consumeNextWith { actualFeatureAction: FeatureActions ->
+        assertThat(actualFeatureAction).isEqualTo(FeatureActions.UPDATED)
+      }.verifyComplete()
     }
     Then("the user gets the response as") { expectedResponse: String ->
       val featureApiBean: FeatureApiBean =
         Gson().fromJson(expectedResponse, FeatureApiBean::class.java)
-      assertThat(actualResponse).isEqualToComparingOnlyGivenFields(featureApiBean)
+      StepVerifier.create(actualFeatureApiResponse).consumeNextWith { actualFeatureApiBean: FeatureApiBean ->
+        assertThat(actualFeatureApiBean).isEqualToComparingOnlyGivenFields(featureApiBean)
+      }.verifyComplete()
     }
   }
 }

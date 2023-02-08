@@ -36,6 +36,7 @@ import org.ff4j.services.constants.FeatureConstants.RESOURCE_FEATURES
 import org.ff4j.services.constants.FeatureConstants.RESOURCE_FF4J
 import org.ff4j.services.constants.FeatureConstants.RESOURCE_STORE
 import org.ff4j.services.domain.FeatureApiBean
+import org.ff4j.services.model.FeatureActions
 import org.ff4j.spring.boot.web.api.utils.FeatureWebUtils
 import org.ff4j.web.FF4jWebConstants.*
 import org.springframework.beans.factory.annotation.Autowired
@@ -65,7 +66,7 @@ class FeatureResource(@Autowired val featureServices: FeatureServices) {
   )
   @GetMapping(produces = [APPLICATION_JSON_VALUE])
   fun getFeatureByUID(@PathVariable(value = PARAM_UID) featureUID: String): ResponseEntity<Mono<FeatureApiBean>> =
-    ResponseEntity.ok(Mono.just(featureServices.getFeature(featureUID)))
+    ResponseEntity.ok(featureServices.getFeature(featureUID))
 
   @Operation(summary = "Create or update a feature", tags = ["Feature"])
   @ApiResponses(
@@ -86,14 +87,14 @@ class FeatureResource(@Autowired val featureServices: FeatureServices) {
   fun createOrUpdateFeature(
     @PathVariable(value = PARAM_UID) featureUID: String,
     @RequestBody featureApiBean: FeatureApiBean
-  ): Mono<ResponseEntity<Boolean>> =
-    Mono.just(
-      FeatureWebUtils.getBooleanResponseEntityByHttpStatus(
-        featureServices.createOrUpdateFeature(
-          featureUID, featureApiBean
-        )
-      )
+  ): Mono<ResponseEntity<Boolean>> {
+    val featureAction: Mono<FeatureActions> = featureServices.createOrUpdateFeature(
+      featureUID, featureApiBean
     )
+    return featureAction.flatMap { action ->
+      Mono.just(FeatureWebUtils.getBooleanResponseEntityByHttpStatus(action))
+    }
+  }
 
   @Operation(summary = "Delete a feature", tags = ["Feature"])
   @ApiResponses(
