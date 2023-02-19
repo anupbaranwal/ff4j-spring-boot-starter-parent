@@ -65,7 +65,7 @@ class PropertyResource(@Autowired val propertyServices: PropertyServices) {
   )
   @GetMapping(produces = [APPLICATION_JSON_VALUE])
   fun getProperty(@PathVariable(value = PARAM_NAME) propertyName: String): ResponseEntity<Mono<PropertyApiBean>> =
-    ResponseEntity.ok(Mono.just(propertyServices.getProperty(propertyName)))
+    ResponseEntity.ok(propertyServices.getProperty(propertyName))
 
   @Operation(summary = "Create or update a property", tags = ["Property"])
   @ApiResponses(
@@ -80,10 +80,11 @@ class PropertyResource(@Autowired val propertyServices: PropertyServices) {
   fun createOrUpdateProperty(
     @PathVariable(value = PARAM_NAME) propertyName: String,
     @RequestBody propertyApiBean: PropertyApiBean
-  ): ResponseEntity<Mono<Boolean>> =
-      FeatureWebUtils.getBooleanResponseEntityByHttpStatus(
-        propertyServices.createOrUpdateProperty(propertyName, propertyApiBean)
-      )
+  ): ResponseEntity<Mono<Boolean>> {
+    val featureActions = propertyServices.createOrUpdateProperty(propertyName, propertyApiBean)
+    //TODO: remove the blocking call
+    return featureActions.map { action -> FeatureWebUtils.getBooleanResponseEntityByHttpStatus(action)}.block()
+  }
 
   @Operation(summary = "Delete a property", tags = ["Property"])
   @ApiResponses(

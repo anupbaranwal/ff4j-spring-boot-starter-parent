@@ -19,7 +19,7 @@ Feature: FeatureStoreServices
   # Get information of the feature store
   Scenario: When the user tries to retrieve the feature store information
     When the user requests for the feature store
-    Then the user gets the response as
+    Then the user gets the "FEATURE_STORE" response as
     """
     {
       "type": "org.ff4j.store.InMemoryFeatureStore",
@@ -40,14 +40,11 @@ Feature: FeatureStoreServices
   Scenario: When the user tries to retrieve all the feature in the feature store when the feature store is empty
     Given the feature store is cleared
     When the user requests for all the features from the feature store
-    Then the user gets the response as
-    """
-    []
-    """
+    Then the user gets empty "FEATURE_API_BEAN" response
 
   Scenario: When the user tries to retrieve all the features in the feature store
     When the user requests for all the features from the feature store
-    Then the user gets the response as
+    Then the user gets the "FEATURE_API_BEAN" response as
     """
     [
       {
@@ -78,7 +75,7 @@ Feature: FeatureStoreServices
   Scenario: When the user tries to retrieve all the groups from the feature store when the feature store is empty
     Given the feature store is cleared
     When the user requests for all the groups from the feature store
-    Then the user gets the response as
+    Then the user gets empty "GROUP_DESC_API" response
     """
     []
     """
@@ -89,7 +86,7 @@ Feature: FeatureStoreServices
       | cart   | false  | the cart page  | user  | ROLE_ADMIN           |
       | search | true   | the login page |       | ROLE_ADMIN,ROLE_USER |
     When the user requests for all the groups from the feature store
-    Then the user gets the response as
+    Then the user gets the "GROUP_DESC_API" response as
     """
     [
       {
@@ -112,7 +109,7 @@ Feature: FeatureStoreServices
   Scenario: When the user tries to delete all the features in the feature store
     When the user requests to delete all the features from the feature store
     When the user requests for all the features from the feature store
-    Then the user gets the response as
+    Then the user gets the "FEATURE_API_BEAN" response as
     """
     []
     """
@@ -128,7 +125,7 @@ Feature: FeatureStoreServices
       | uid  | enable | description   | group | permissions |
       | cart | false  | the cart page | user  | ROLE_USER   |
     When the user requests to get the cached feature store
-    Then the user gets the response as
+    Then the user gets the "CACHE_BEAN" response as
     """
     {
       "cacheProvider": "InMemory",
@@ -138,7 +135,7 @@ Feature: FeatureStoreServices
     }
     """
     When the user requests for all the features from the feature store
-    Then the user gets the response as
+    Then the user gets the "FEATURE_API_BEAN" response as
     """
     [
       {
@@ -176,7 +173,7 @@ Feature: FeatureStoreServices
       | uid  | enable | description   | group | permissions |
       | cart | false  | the cart page | user  | ROLE_USER   |
     When the user requests to get the cached feature store
-    Then the user gets the response as
+    Then the user gets the "CACHE_BEAN" response as
     """
     {
       "cacheProvider": "InMemory",
@@ -186,7 +183,7 @@ Feature: FeatureStoreServices
     }
     """
     When the user requests for all the features from the feature store
-    Then the user gets the response as
+    Then the user gets the "FEATURE_API_BEAN" response as
     """
     [
       {
@@ -214,7 +211,7 @@ Feature: FeatureStoreServices
     """
     When the user requests to clear the cached feature store
     When the user requests to get the cached feature store
-    Then the user gets the response as
+    Then the user gets the "CACHE_BEAN" response as
     """
     {
       "cacheProvider": "InMemory",
@@ -224,7 +221,7 @@ Feature: FeatureStoreServices
     }
     """
     When the user requests for all the features from the feature store
-    Then the user gets the response as
+    Then the user gets the "FEATURE_API_BEAN" response as
     """
     [
       {
@@ -251,7 +248,7 @@ Feature: FeatureStoreServices
     ]
     """
     When the user requests for the feature store
-    Then the user gets the response as
+    Then the user gets the "FEATURE_STORE" response as
     """
     {
       "type": "org.ff4j.cache.FF4jCacheProxy",

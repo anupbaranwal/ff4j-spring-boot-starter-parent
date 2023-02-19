@@ -28,6 +28,13 @@ import org.ff4j.core.Feature
 import org.ff4j.services.FF4JTestHelperUtils
 import org.ff4j.services.FeatureStoreServices
 import org.ff4j.services.InitializerStepDef
+import org.ff4j.services.domain.CacheApiBean
+import org.ff4j.services.domain.FeatureApiBean
+import org.ff4j.services.domain.FeatureStoreApiBean
+import org.ff4j.services.domain.GroupDescApiBean
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
+import reactor.test.StepVerifier
 
 /**
  * Created by Paul
@@ -37,7 +44,10 @@ import org.ff4j.services.InitializerStepDef
 class FeatureStoreServicesStepDef(ff4j: FF4j, featureStoreServices: FeatureStoreServices) : En {
 
   private val testUtils = FF4JTestHelperUtils(ff4j)
-  private lateinit var actualResponse: Any
+  private lateinit var cacheApiBeanResponse: Mono<CacheApiBean>
+  private lateinit var featureStoreApiBeanResponse: Mono<FeatureStoreApiBean>
+  private lateinit var featureApiBeanResponse: Flux<FeatureApiBean>
+  private lateinit var groupDescApiBeanResponse: Flux<GroupDescApiBean>
   private lateinit var exception: Throwable
 
   init {
@@ -61,20 +71,20 @@ class FeatureStoreServicesStepDef(ff4j: FF4j, featureStoreServices: FeatureStore
       }
     }
     When("the user requests for the feature store") {
-      actualResponse = featureStoreServices.getFeatureStore()
+      featureStoreApiBeanResponse = featureStoreServices.getFeatureStore()
     }
     When("the user requests for all the features from the feature store") {
-      actualResponse = featureStoreServices.getAllFeatures()
+      featureApiBeanResponse = featureStoreServices.getAllFeatures()
     }
     When("the user requests for all the groups from the feature store") {
-      actualResponse = featureStoreServices.getAllGroups()
+      groupDescApiBeanResponse = featureStoreServices.getAllGroups()
     }
     When("the user requests to delete all the features from the feature store") {
       featureStoreServices.deleteAllFeatures()
     }
     When("the user requests to get the cached feature store") {
       try {
-        actualResponse = featureStoreServices.getFeaturesFromCache()
+        cacheApiBeanResponse = featureStoreServices.getFeaturesFromCache()
       } catch (t: Throwable) {
         exception = t
       }
@@ -86,9 +96,44 @@ class FeatureStoreServicesStepDef(ff4j: FF4j, featureStoreServices: FeatureStore
         exception = t
       }
     }
-    Then("the user gets the response as") { expectedResponse: String ->
-      testUtils.assertLenientResponse(expectedResponse, actualResponse)
+    Then("the user gets the {string} response as") { responseType: String, expectedResponse: String ->
+      when (responseType) {
+        "FEATURE_STORE" -> {
+          StepVerifier.create(featureStoreApiBeanResponse)
+            .consumeNextWith { actualFeatureApiBean: FeatureStoreApiBean ->
+              testUtils.assertLenientResponse(expectedResponse, actualFeatureApiBean)
+            }.verifyComplete()
+        }
+        "CACHE_BEAN" -> {
+          StepVerifier.create(cacheApiBeanResponse)
+            .consumeNextWith { actualFeatureApiBean: CacheApiBean ->
+              testUtils.assertLenientResponse(expectedResponse, actualFeatureApiBean)
+            }.verifyComplete()
+        }
+        "GROUP_DESC_API" -> {
+          StepVerifier.create(groupDescApiBeanResponse)
+            .consumeNextWith { actualFeatureApiBean: GroupDescApiBean ->
+              testUtils.assertLenientResponse(expectedResponse, actualFeatureApiBean)
+            }.verifyComplete()
+        }
+        "FEATURE_API_BEAN" -> {
+          StepVerifier.create(featureApiBeanResponse)
+            .consumeNextWith { actualFeatureApiBean: FeatureApiBean ->
+              testUtils.assertLenientResponse(expectedResponse, actualFeatureApiBean)
+            }.verifyComplete()
+        }
+      }
     }
+
+    Then("the user gets empty {string} response") { responseType: String ->
+      when (responseType) {
+        "FEATURE_API_BEAN" -> StepVerifier.create(featureApiBeanResponse).verifyComplete()
+        "GROUP_DESC_API" -> StepVerifier.create(groupDescApiBeanResponse).verifyComplete()
+        "CACHE_BEAN" -> StepVerifier.create(cacheApiBeanResponse).verifyComplete()
+        "FEATURE_STORE" -> StepVerifier.create(featureStoreApiBeanResponse).verifyComplete()
+      }
+    }
+
     Then("the user gets an exception {string}") { className: String ->
       testUtils.assertException(exception, className)
     }
